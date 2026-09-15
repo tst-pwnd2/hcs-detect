@@ -1,0 +1,75 @@
+# PWND CP3 spot-check 1: topology and ground truth.
+# Derived from spot_check/routers/* (the subnets) and spot_check/raceboat_users/* (the alice and bob IPs).
+
+[scenario]
+name = "cp3_spotcheck_1"
+# Capture chunk tags as they appear in the pcap filenames. The three files are
+# time-contiguous slices of ONE capture (size-rotated at 500 MB), not parallel interfaces.
+chunks = ["ens60", "ens61", "ens62"]
+
+[topology]
+# One client subnet per channel; alice at .4, benign cover hosts alongside her.
+client_nets = ["10.1.0.0/16"]
+# server_net: covert peers (bobs) and the cover services (IRC, web, file).
+peer_nets = ["10.2.0.0/24"]
+
+[topology.service_nets]
+"10.5.5.0/24" = "minio"      # S3-compatible object store; Skyhook's dead drop, and cover traffic for every node
+"10.3.3.0/24" = "mastodon"   # Mastodon; the Mastodon channel's carrier, and cover traffic for every node
+
+[topology.peer_service_ports]
+443  = "https"
+6697 = "irc"
+2121 = "file"
+8080 = "web"
+8675 = "obfs4"     # non-standard high port the obfs4 bridge listened on in this range
+
+# Ground truth. `service` may be a single IP or a CIDR.
+[[covert]]
+name = "skyhook"
+host = "10.1.1.4"
+service = "10.5.5.0/24"
+port = 8443
+role = "sender (PublicUser transport, libcurl, new connection per poll)"
+
+[[covert]]
+name = "skyhook-bob"
+host = "10.2.0.58"
+service = "10.5.5.0/24"
+port = 8443
+role = "receiver (AccountHolder transport, AWS SDK keep-alive)"
+
+[[covert]]
+name = "mastodon"
+host = "10.1.4.4"
+service = "10.3.3.0/24"
+port = 443
+role = "sender"
+
+[[covert]]
+name = "mastodon-bob"
+host = "10.2.0.86"
+service = "10.3.3.0/24"
+port = 443
+role = "receiver"
+
+[[covert]]
+name = "obfs4"
+host = "10.1.2.4"
+service = "10.2.0.72"
+port = 8675
+role = "direct tunnel (Racebird / Lyrebird obfs4)"
+
+[[covert]]
+name = "racetunnel"
+host = "10.1.0.4"
+service = "10.2.0.44"
+port = 443
+role = "direct tunnel (WebTunnel, TLS mimicry)"
+
+[pipeline]
+min_session_packets = 40
+payload_prefix_bytes = 8192     # client->server bytes captured per flow for the FEP test
+first_segment_bytes  = 64       # like-for-like FEP window: first N bytes of the first data segment
+payload_ports = [8443]          # extra service ports to capture payload for (union with peer ports + covert ports)
+# tshark = "/Applications/Wireshark.app/Contents/MacOS/tshark"   # auto-detected if omitted

@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hcs-detect"
+version = "0.1.0"
+description = "Passive detection of hidden communication systems (RACE covert channels) in packet captures: beaconing, distributional divergence (KL/KS), and fully-encrypted-protocol tests."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "No license is offered beyond that stipulated in Agreement HR001125CE021" }
+authors = [{ name = "Tom Reynolds" }]
+keywords = ["covert-channel", "pcap", "traffic-analysis", "beaconing", "KL-divergence", "RACE", "PWND"]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.10",
+  "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.scripts]
+hcs-detect = "hcs_detect.cli:main"
+
+# PEP 735 dependency groups; `uv sync` installs the `dev` group by default.
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hcs_detect"]
+
+[tool.uv]
+# Reproducible resolution; bump deliberately with `uv lock --upgrade`.
+package = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E731"]  # lambda assignment is used deliberately in ingest
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
