@@ -1,7 +1,7 @@
 #
 # This work was authored by Two Six Labs, LLC dba Two Six Technologies and team
 # in support of Defense Advanced Research Projects Agency under Agreement
-# <CONTRACT NUMBER>.
+# HR001125CE021.
 #
 # Use, duplication, or disclosure is subject to the restrictions as stated in
 # Agreement HR001125CE021 between the Government and the Performer.
